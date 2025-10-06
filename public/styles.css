@@ -1,0 +1,102 @@
+/* styles.css */
+:root {
+  --bg: #0f1724;
+  --card: #0b1220;
+  --accent: #06b6d4;
+  --muted: #9aa4b2;
+  --text: #e6eef6;
+}
+/* Light theme (opt-in) */
+[data-theme="light"] {
+  --bg: #f7fafc;
+  --card: #ffffff;
+  --accent: #0ea5b7;
+  --muted: #64748b;
+  --text: #0b1220;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  padding: 24px;
+}
+main {
+  max-width: 900px;
+  margin: 0 auto;
+}
+h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+h2 {
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+.card {
+  background: var(--card);
+  padding: 14px;
+  border-radius: 10px;
+  margin-top: 14px;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+}
+pre {
+  background: var(--pre-bg, rgba(2, 6, 23, 0.6));
+  padding: 10px;
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 320px;
+  color: var(--text);
+}
+/* Layout for fingerprint controls */
+.fp-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 8px;
+}
+button {
+  background: var(--accent);
+  color: var(--btn-text, #012);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+button:hover {
+  filter: brightness(0.98);
+}
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+#tabs-status {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+/* Simple View styles */
+.sv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sv-item {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  border-radius: 8px;
+}
+.sv-wide {
+  grid-column: 1 / -1;
+}
+.sv-item div {
+  margin-top: 6px;
+  color: var(--text);
+  font-size: 14px;
+}

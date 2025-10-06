@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>What websites know about you — PoC</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <main>
+        <h1>What websites know about you — PoC</h1>
+        <div style="margin-top:10px">
+            <button id="toggle-view">Simple view</button>
+        </div>
+        <p class="muted">Demo for educational purposes. Ask permission before testing on others.</p>
+
+        <section id="client-info" class="card">
+            <h2>Client-side info</h2>
+            <pre id="client-json">Collecting...</pre>
+        </section>
+
+        <!-- Simple friendly view for non-technical users -->
+        <section id="simple-view" class="card" style="display:none">
+            <h2>Overview (simple)</h2>
+            <div class="sv-grid">
+                <div class="sv-item"><strong>Browser</strong>
+                    <div id="sv-browser">—</div>
+                </div>
+                <div class="sv-item"><strong>Device</strong>
+                    <div id="sv-device">—</div>
+                </div>
+                <div class="sv-item"><strong>Network</strong>
+                    <div id="sv-network">—</div>
+                </div>
+                <div class="sv-item"><strong>Privacy</strong>
+                    <div id="sv-privacy">—</div>
+                </div>
+                <div class="sv-item sv-wide"><strong>Fingerprint</strong>
+                    <div id="sv-fingerprint">—</div>
+                </div>
+            </div>
+            <p class="muted">This view translates technical data into plain language for non-technical users.</p>
+        </section>
+
+        <section id="server-info" class="card">
+            <h2>Server-side info (what this server sees)</h2>
+            <button id="refresh-server">Fetch server info</button>
+            <pre id="server-json">—</pre>
+        </section>
+
+        <section id="actions" class="card">
+            <h2>Actions</h2>
+            <button id="get-location">Request Geolocation</button>
+            <button id="try-local-ip">Try get local IP (may be blocked)</button>
+            <button id="list-devices">Enumerate Media Devices (permission may be needed)</button>
+            <p class="muted">Open multiple tabs of this demo to see same-site tab detection.</p>
+            <div id="tabs-status"></div>
+        </section>
+
+        <section id="notes" class="card">
+            <h2>Notes / Ethics</h2>
+            <ul>
+                <li>Geolocation, camera/mic access require explicit permission from the user.</li>
+                <li>Browsers intentionally limit what a page can see about other tabs & cross-origin resources.</li>
+                <li>Do not use these techniques to invade privacy — they are for teaching & testing only.</li>
+            </ul>
+        </section>
+        <div id="fingerprint-card" class="card">
+            <h2>Fingerprint</h2>
+            <div class="fp-controls">
+                <button id="copy-fp">Copy</button>
+                <button id="export-fp">Export JSON</button>
+                <button id="toggle-theme">Toggle theme</button>
+                <span id="copy-status" class="muted" aria-live="polite"></span>
+            </div>
+            <div id="fingerprint-hash" class="muted">Hash: —</div>
+            <div id="fingerprint-score">Score: —</div>
+            <pre id="fingerprint-json">—</pre>
+            <h3>Privacy checklist</h3>
+            <ul id="privacy-checklist"></ul>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

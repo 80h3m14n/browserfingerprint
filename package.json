@@ -1,0 +1,13 @@
+{
+  "name": "browserfingerprint",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "request-ip": "^2.1.3"
+  }
+}
