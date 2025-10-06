@@ -343,6 +343,184 @@
     } catch {}
   }
 
+  // ---------- New features: accounts, autofill, device position, uptime ----------
+
+  // 1) Accounts: best-effort check using Credential Management API (federated)
+  async function checkLoggedInAccounts() {
+    const out = { supported: false, credentials: [] };
+    if (!("credentials" in navigator)) return out;
+    out.supported = true;
+    try {
+      // request federated credentials (no silent discovery guaranteed)
+      // we use mediation: 'optional' so it won't prompt in many browsers
+      const cred = await navigator.credentials.get({
+        federated: { providers: [] },
+        mediation: "optional",
+      });
+      if (cred) {
+        // Credential type can be FederatedCredential or PasswordCredential
+        if (cred.type === "federated" || cred.provider) {
+          out.credentials.push({ type: "federated", provider: cred.provider });
+        } else if (cred.type === "password" || cred.id) {
+          out.credentials.push({ type: "password", id: cred.id });
+        } else {
+          out.credentials.push({ type: cred.type || "unknown" });
+        }
+      }
+    } catch (e) {
+      // Some browsers will throw or reject; return best-effort info
+      out.error = String(e);
+    }
+    return out;
+  }
+
+  // 2) Autofill probe: create (not appended) form inputs, focus+blur to let browser autofill, read values
+  async function probeAutofill() {
+    // We'll create fields with common autocomplete tokens and observe if they get filled
+    const fields = [
+      { name: "name", ac: "name" },
+      { name: "email", ac: "email" },
+      { name: "tel", ac: "tel" },
+      { name: "address", ac: "street-address" },
+      { name: "postal", ac: "postal-code" },
+      { name: "cc", ac: "cc-number" },
+    ];
+    const form = document.createElement("form");
+    form.style.position = "fixed";
+    form.style.left = "-9999px";
+    form.style.top = "-9999px";
+    fields.forEach((f) => {
+      const input = document.createElement("input");
+      input.name = f.name;
+      input.autocomplete = f.ac;
+      input.type = "text";
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    // Give browser a tick to possibly autofill
+    await new Promise((r) => setTimeout(r, 250));
+    // Focus and blur each field to trigger autofill in some browsers
+    for (const el of form.elements) {
+      try {
+        el.focus();
+        // some browsers need multiple focus/blur cycles
+        el.blur();
+        await new Promise((r) => setTimeout(r, 50));
+      } catch {}
+    }
+    const result = {};
+    Array.from(form.elements).forEach((el) => {
+      result[el.name] = el.value || null;
+    });
+    document.body.removeChild(form);
+    return result;
+  }
+
+  // 3) Device position: use DeviceOrientation / DeviceMotion to guess if device is flat
+  let devicePositionState = { mode: "unknown", last: null };
+  function startDevicePositionListeners() {
+    if ("ondeviceorientation" in window) {
+      const handle = (ev) => {
+        // gamma: left-right tilt, beta: front-back tilt, alpha: compass
+        const beta = ev.beta; // -180..180 (front-back)
+        const gamma = ev.gamma; // -90..90 (left-right)
+        devicePositionState.last = { beta, gamma, timestamp: Date.now() };
+        // heuristics: if beta around 0 and gamma around 0 -> flat (lying)
+        if (Math.abs(beta) < 15 && Math.abs(gamma) < 15)
+          devicePositionState.mode = "flat";
+        else if (Math.abs(beta) > 50) devicePositionState.mode = "upright";
+        else devicePositionState.mode = "tilted";
+        updateDevicePositionUI();
+      };
+      window.addEventListener("deviceorientation", handle, { passive: true });
+    } else if ("ondevicemotion" in window) {
+      const handle = (ev) => {
+        const a = ev.accelerationIncludingGravity;
+        if (!a) return;
+        // When flat, gravity pulls mostly on z; when upright, x/y larger
+        const x = a.x || 0;
+        const y = a.y || 0;
+        const z = a.z || 0;
+        devicePositionState.last = { x, y, z, timestamp: Date.now() };
+        const absZ = Math.abs(z);
+        const absXY = Math.abs(x) + Math.abs(y);
+        if (absZ > absXY * 1.5) devicePositionState.mode = "flat";
+        else if (absXY > absZ * 1.5) devicePositionState.mode = "upright";
+        else devicePositionState.mode = "tilted";
+        updateDevicePositionUI();
+      };
+      window.addEventListener("devicemotion", handle, { passive: true });
+    } else {
+      // no sensors
+      devicePositionState.mode = "unavailable";
+      updateDevicePositionUI();
+    }
+  }
+
+  function updateDevicePositionUI() {
+    const el = document.getElementById("device-position");
+    if (!el) return;
+    el.textContent = devicePositionState.mode || "unknown";
+  }
+
+  // 4) Uptime: page uptime + heuristic browser/process uptime (best-effort via performance.timing)
+  const pageStart = Date.now();
+  function updateUptimeUI() {
+    const pageEl = document.getElementById("page-uptime");
+    const browserEl = document.getElementById("browser-uptime");
+    if (pageEl) {
+      const s = Math.floor((Date.now() - pageStart) / 1000);
+      pageEl.textContent = `${s}s`;
+    }
+    if (browserEl && performance && performance.timing) {
+      // navigationStart is when the browser started navigation for this document
+      const navStart = performance.timing.navigationStart || null;
+      if (navStart) {
+        const s = Math.floor((Date.now() - navStart) / 1000);
+        browserEl.textContent = `${s}s`;
+      } else {
+        browserEl.textContent = "unknown";
+      }
+    }
+  }
+
+  // Wire new UI controls
+  const checkAccountsBtn = document.getElementById("check-accounts");
+  const accountsListEl = document.getElementById("accounts-list");
+  const probeAutofillBtn = document.getElementById("probe-autofill");
+  const autofillJson = document.getElementById("autofill-json");
+
+  if (checkAccountsBtn) {
+    checkAccountsBtn.addEventListener("click", async () => {
+      checkAccountsBtn.disabled = true;
+      accountsListEl.textContent = "Checking...";
+      const res = await checkLoggedInAccounts();
+      accountsListEl.textContent = JSON.stringify(res, null, 2);
+      checkAccountsBtn.disabled = false;
+    });
+  }
+
+  if (probeAutofillBtn) {
+    probeAutofillBtn.addEventListener("click", async () => {
+      probeAutofillBtn.disabled = true;
+      autofillJson.textContent = "Probing...";
+      try {
+        const r = await probeAutofill();
+        autofillJson.textContent = JSON.stringify(r, null, 2);
+      } catch (e) {
+        autofillJson.textContent = String(e);
+      }
+      probeAutofillBtn.disabled = false;
+    });
+  }
+
+  // start device position listeners and uptime interval
+  try {
+    startDevicePositionListeners();
+  } catch {}
+  updateUptimeUI();
+  setInterval(updateUptimeUI, 1000);
+
   // ---------- gather navigator basic info ----------
   function gatherNavigatorInfo() {
     const nav = navigator;

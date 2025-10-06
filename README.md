@@ -1,34 +1,58 @@
 PoC website that demonstrates what websites can legitimately detect about you (location with permission, OS, browser fingerprint-ish data, battery, devices, local IP attempts, number of same-site open tabs, headers & IP on the server-side, etc.).
 
+
+**NOTE:** When you visit a website, it can gather a significant amount of information about you, even without you actively providing any details. 
+\- This includes your IP address, which can reveal your approximate geographic location, device type, browser and operating system information through the user agent string, and your screen resolution.
+
+\- Websites can also track your browsing behavior, such as the pages you visit, how long you stay on them, your click patterns, and the referral source that brought you to the site.
+
+\- This data is often collected through cookies, which can monitor your activity across different sites, and through browser fingerprinting, which combines various device and browser characteristics to create a unique identifier.
+
+⚠️While the individual pieces of information may not be highly personal, their combination can form a detailed profile that can be used for targeted advertising or, in some cases, to identify you personally
+
 ## Features
 
-Server-side info (/whoami): server sees your source IP (or proxy IP), User-Agent, Accept-Language, Referer, and other headers.
+\- Server-side info (/whoami): server sees your source IP (or proxy IP), User-Agent, Accept-Language, Referer, and other headers.
 
-Navigator & screen: navigator.userAgent, platform, language, hardwareConcurrency, deviceMemory, screen.width/height — commonly used in fingerprinting.
+\- Navigator & screen: navigator.userAgent, platform, language, hardwareConcurrency, deviceMemory, screen.width/height — commonly used in fingerprinting.
 
-Network information: navigator.connection exposes effective link type, RTT and downlink in some browsers.
+\- Network information: navigator.connection exposes effective link type, RTT and downlink in some browsers.
 
-Battery API: battery level & charging state (may be unavailable in some browsers).
+\- Battery API: battery level & charging state (may be unavailable in some browsers).
 
-Geolocation: exact coordinates — only after explicit permission.
+\- Geolocation: exact coordinates — only after explicit permission.
 
-Media devices: presence of camera/mic and device labels (labels require permission).
+\- Media devices: presence of camera/mic and device labels (labels require permission).
 
-Local IP via WebRTC: some older browsers exposed local IP addresses via WebRTC ICE candidates — modern browsers often block this.
+\- Local IP via WebRTC: some older browsers exposed local IP addresses via WebRTC ICE candidates — modern browsers often block this.
 
-Same-origin tab detection: BroadcastChannel + localStorage allow a site to detect other tabs/windows of the same origin.
+\- Same-origin tab detection: BroadcastChannel + localStorage allow a site to detect other tabs/windows of the same origin.
 
-Visibility API: site can know when you switch tabs/windows (page visibility).
+\- Visibility API: site can know when you switch tabs/windows (page visibility).
 
-Fingerprint Scoring: Generate a hash from device/browser traits (user agent, timezone, screen, languages, etc.) and compare how rare it is based on a simple uniqueness algorithm (local DB count).
+\- Fingerprint Scoring: Generate a hash from device/browser traits (user agent, timezone, screen, languages, etc.) and compare how rare it is based on a simple uniqueness algorithm (local DB count).
 
-Privacy Checklist: Visual guide that reacts to user fingerprint
+\- Privacy Checklist: Visual guide that reacts to user fingerprint
+
+
+
 
 ## Limitations
 
 A site cannot enumerate open tabs for other origins, arbitrarily read other sites' content, or bypass permission prompts.
 
 Browsers have hardened many fingerprinting leaks — but enough surface remains for fingerprinting.
+
+
+## TODO
+
+Features to add:
+
+- Detect which other online accounts you are logged into
+- Read Browser autofill details
+- Device position (Gyroscope) i.e flat likely on table or stand
+- Device uptime
+- Get installed browser extensions
 
 ## Project structure
 

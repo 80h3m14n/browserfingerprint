@@ -100,6 +100,39 @@
             <ul id="privacy-checklist"></ul>
         </div>
 
+        <section id="accounts-card" class="card">
+            <h2>Logged-in accounts (best-effort)</h2>
+            <p class="muted">Uses the Credential Management API (federated) when available. Results are best-effort;
+                many browsers limit cross-site detection.</p>
+            <button id="check-accounts">Check logged-in accounts</button>
+            <div id="accounts-list">
+                
+            </div>
+        </section>
+
+        <section id="autofill-card" class="card">
+            <h2>Browser autofill</h2>
+            <p class="muted">Probes common autocomplete fields to see if the browser fills them automatically (will not
+                submit any data).</p>
+            <button id="probe-autofill">Probe autofill</button>
+            <pre id="autofill-json"></pre>
+        </section>
+
+        <section id="position-card" class="card">
+            <h2>Device position</h2>
+            <p class="muted">Uses device sensors (if available) to guess whether the device is flat, upright, or
+                unknown.</p>
+            <div id="device-position">unknown</div>
+        </section>
+
+        <section id="uptime-card" class="card">
+            <h2>Uptime</h2>
+            <p class="muted">Shows browser/process uptime and current page uptime (system uptime is not exposed to web
+                pages).</p>
+            <div>Browser/process uptime: <span id="browser-uptime"></span></div>
+            <div>Page uptime: <span id="page-uptime"></span></div>
+        </section>
+
     </main>
 
     <script src="script.js"></script>
