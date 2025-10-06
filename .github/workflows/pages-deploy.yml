@@ -1,0 +1,30 @@
+name: Deploy public/ to GitHub Pages (official)
+
+on:
+    push:
+        branches: [main]
+
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            # If you need to build (e.g., bundling), add steps here. For this repo we already have a public/ folder.
+            - name: Upload public/ as Pages artifact
+              uses: actions/upload-pages-artifact@v1
+              with:
+                  path: ./public
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy to GitHub Pages
+              uses: actions/deploy-pages@v1
