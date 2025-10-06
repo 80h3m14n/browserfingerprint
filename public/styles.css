@@ -116,3 +116,12 @@ body.simple-mode #simple-view {
   color: var(--text);
   font-size: 14px;
 }
+
+.sv-icon {
+  font-size: 20px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.sv-text {
+  vertical-align: middle;
+}

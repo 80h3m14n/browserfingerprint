@@ -16,6 +16,12 @@
   const svNetwork = document.getElementById("sv-network");
   const svPrivacy = document.getElementById("sv-privacy");
   const svFingerprint = document.getElementById("sv-fingerprint");
+  const svScreen = document.getElementById("sv-screen");
+  const svTz = document.getElementById("sv-tz");
+  const svLang = document.getElementById("sv-lang");
+  const svServer = document.getElementById("sv-server");
+  const svLocalips = document.getElementById("sv-localips");
+  const svPublicip = document.getElementById("sv-publicip");
   const refreshServerBtn = document.getElementById("refresh-server");
   const getLocationBtn = document.getElementById("get-location");
   const tryLocalIpBtn = document.getElementById("try-local-ip");
@@ -52,6 +58,177 @@
     if (seenCount <= 10) return 60;
     if (seenCount <= 50) return 30;
     return 10;
+  }
+
+  // Lightweight UA parser to extract common browser name + version and a key
+  // We intentionally keep this small and local to avoid pulling external libs.
+  function parseUserAgent(uaString) {
+    const ua = (uaString || "").toString();
+    // Order matters: Edge/Opera identify as Chrome too.
+    const rules = [
+      { key: "edge", re: /Edg\/([\d\.]+)/i, name: "Edge" },
+      { key: "edge", re: /Edge\/([\d\.]+)/i, name: "Edge" },
+      { key: "opera", re: /OPR\/([\d\.]+)/i, name: "Opera" },
+      { key: "opera", re: /Opera\/([\d\.]+)/i, name: "Opera" },
+      { key: "brave", re: /Brave\/([\d\.]+)/i, name: "Brave" },
+      { key: "chrome", re: /Chrome\/([\d\.]+)/i, name: "Chrome" },
+      { key: "firefox", re: /Firefox\/([\d\.]+)/i, name: "Firefox" },
+      { key: "safari", re: /Version\/([\d\.]+).*Safari/i, name: "Safari" },
+      { key: "tor", re: /TorBrowser\/([\d\.]+)/i, name: "Tor Browser" },
+      // fallback: try to find any Version/X or rv: for IE/others
+      { key: "generic", re: /Version\/([\d\.]+)/i, name: "Browser" },
+    ];
+
+    for (const r of rules) {
+      const m = ua.match(r.re);
+      if (m) return { key: r.key, name: r.name, version: m[1] || "" };
+    }
+
+    // Special-case checks and best-effort parsing
+    if (
+      /brave/i.test(ua) ||
+      (navigator.brave && typeof navigator.brave.isBrave === "function")
+    )
+      return { key: "brave", name: "Brave", version: "" };
+    if (/duckduckgo/i.test(ua))
+      return { key: "duckduckgo", name: "DuckDuckGo", version: "" };
+    if (/chrome/i.test(ua) && !/edg/i.test(ua) && !/opr/i.test(ua)) {
+      const m = ua.match(/Chrome\/([\d\.]+)/i);
+      return { key: "chrome", name: "Chrome", version: m ? m[1] : "" };
+    }
+    if (/safari/i.test(ua) && !/chrome/i.test(ua)) {
+      const m = ua.match(/Version\/([\d\.]+)/i);
+      return { key: "safari", name: "Safari", version: m ? m[1] : "" };
+    }
+    if (/firefox/i.test(ua)) {
+      const m = ua.match(/Firefox\/([\d\.]+)/i);
+      return { key: "firefox", name: "Firefox", version: m ? m[1] : "" };
+    }
+
+    return { key: "unknown", name: uaString || "Unknown", version: "" };
+  }
+
+  // Inline SVG icon generator for browsers (simple, generic shapes to avoid external assets)
+  function svgForBrowser(key) {
+    const base = (w, h, inner) =>
+      `<?xml version="1.0" encoding="UTF-8"?><svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}' aria-hidden='true'>${inner}</svg>`;
+    switch (key) {
+      case "chrome":
+        return base(
+          20,
+          20,
+          "<circle cx='10' cy='10' r='9' stroke='#0ea5b7' stroke-width='2' fill='none'/><circle cx='10' cy='10' r='3' fill='#0ea5b7' />"
+        );
+      case "firefox":
+        return base(
+          20,
+          20,
+          "<path d='M4 14c2-4 8-6 11-6-1 3-4 6-8 6-2 0-3-1-3-0z' fill='#f97316'/>"
+        );
+      case "safari":
+        return base(
+          20,
+          20,
+          "<circle cx='10' cy='10' r='9' stroke='#38bdf8' stroke-width='2' fill='none'/><path d='M10 4 L11 9 L15 10 L11 11 L10 16 L9 11 L5 10 L9 9 Z' fill='#38bdf8' />"
+        );
+      case "edge":
+        return base(
+          20,
+          20,
+          "<path d='M3 12c3-6 10-8 14-6-2 3-5 7-10 8-2 0-5-1-4-2z' fill='#60a5fa' />"
+        );
+      case "opera":
+        return base(
+          20,
+          20,
+          "<circle cx='10' cy='10' r='7' stroke='#ef4444' stroke-width='2' fill='none'/>"
+        );
+      case "brave":
+        return base(
+          20,
+          20,
+          "<rect x='3' y='3' width='14' height='14' rx='3' fill='#f59e0b' />"
+        );
+      case "tor":
+        return base(
+          20,
+          20,
+          "<circle cx='10' cy='10' r='8' fill='#a78bfa' /><circle cx='10' cy='10' r='4' fill='#7c3aed' />"
+        );
+      case "duckduckgo":
+        return base(
+          20,
+          20,
+          "<path d='M4 12c2-4 10-6 12-6-1 3-4 6-8 6-2 0-3-1-4 0z' fill='#10b981' />"
+        );
+      default:
+        return base(
+          20,
+          20,
+          "<rect x='2' y='2' width='16' height='16' rx='3' fill='#64748b' />"
+        );
+    }
+  }
+
+  // Inline SVG icon generator for OS
+  function svgForOS(key) {
+    const base = (w, h, inner) =>
+      `<?xml version="1.0" encoding="UTF-8"?><svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}' aria-hidden='true'>${inner}</svg>`;
+    switch (key) {
+      case "android":
+        return base(
+          20,
+          20,
+          "<rect x='4' y='6' width='12' height='10' rx='2' fill='#10b981' />"
+        );
+      case "ios":
+        return base(
+          20,
+          20,
+          "<rect x='6' y='3' width='8' height='14' rx='2' fill='#f97316' />"
+        );
+      case "macos":
+        return base(20, 20, "<circle cx='10' cy='10' r='7' fill='#f43f5e' />");
+      case "windows":
+        return base(
+          20,
+          20,
+          "<rect x='2' y='3' width='7' height='6' fill='#60a5fa' /><rect x='11' y='3' width='7' height='6' fill='#60a5fa' /><rect x='2' y='11' width='7' height='6' fill='#2563eb' /><rect x='11' y='11' width='7' height='6' fill='#2563eb' />"
+        );
+      case "linux":
+        return base(20, 20, "<circle cx='10' cy='10' r='8' fill='#0ea5b7' />");
+      default:
+        return base(
+          20,
+          20,
+          "<rect x='3' y='3' width='14' height='14' rx='3' fill='#94a3b8' />"
+        );
+    }
+  }
+
+  function getBrowserIconAndName(ua) {
+    const parsed = parseUserAgent(ua);
+    return {
+      svg: svgForBrowser(parsed.key),
+      name: parsed.name,
+      version: parsed.version,
+    };
+  }
+
+  function getOSIconAndName(platform, ua) {
+    const p = (platform || "").toLowerCase();
+    const u = (ua || "").toLowerCase();
+    if (/android/i.test(u) || /android/.test(p))
+      return { svg: svgForOS("android"), name: "Android" };
+    if (/iphone|ipad|ipod|ios/i.test(u) || /iphone|ipad/.test(p))
+      return { svg: svgForOS("ios"), name: "iOS" };
+    if (/mac/i.test(p) || /mac os x/i.test(u))
+      return { svg: svgForOS("macos"), name: "macOS" };
+    if (/win/i.test(p) || /windows/i.test(u))
+      return { svg: svgForOS("windows"), name: "Windows" };
+    if (/linux/i.test(p) || /linux/i.test(u))
+      return { svg: svgForOS("linux"), name: "Linux" };
+    return { svg: svgForOS("generic"), name: platform || "Unknown OS" };
   }
 
   function renderPrivacyChecklist(info) {
@@ -116,11 +293,20 @@
 
   function updateSimpleView(info, serverInfo, hash, seenCount) {
     try {
-      if (svBrowser) svBrowser.textContent = `${info.userAgent.split("(")[0]}`;
-      if (svDevice)
-        svDevice.textContent = `${info.platform} — ${
+      if (svBrowser) {
+        const b = getBrowserIconAndName(info.userAgent);
+        // show icon + name + version (if available)
+        const nameWithVer = b.version ? `${b.name} ${b.version}` : b.name;
+        svBrowser.innerHTML = `<span class="sv-icon" aria-hidden="true">${b.svg}</span> <span class="sv-text">${nameWithVer}</span>`;
+      }
+      if (svDevice) {
+        const os = getOSIconAndName(info.platform, info.userAgent);
+        svDevice.innerHTML = `<span class="sv-icon" aria-hidden="true">${
+          os.svg
+        }</span> <span class="sv-text">${os.name} — ${
           info.hardwareConcurrency || "?"
-        } cores`;
+        } cores</span>`;
+      }
       if (svScreen)
         svScreen.textContent = `${info.screen?.width}×${info.screen?.height} (${info.screen?.colorDepth}-bit)`;
       if (svNetwork)

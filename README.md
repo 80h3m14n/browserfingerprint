@@ -62,7 +62,7 @@ Open the same URL in other tabs to see the demo of same-origin tab detection.
 
 ---
 
-## Hosting on GitHub Pages (Work in progress- comming soon)
+## Hosting on GitHub Pages
 
 This project is served as a static site from the `public/` folder on GitHub Pages. Note a few differences when running on a static host:
 
