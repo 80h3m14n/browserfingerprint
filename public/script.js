@@ -121,10 +121,17 @@
         svDevice.textContent = `${info.platform} — ${
           info.hardwareConcurrency || "?"
         } cores`;
+      if (svScreen)
+        svScreen.textContent = `${info.screen?.width}×${info.screen?.height} (${info.screen?.colorDepth}-bit)`;
       if (svNetwork)
         svNetwork.textContent = `${
           info.connection?.effectiveType || "unknown"
         } — ${info.online ? "online" : "offline"}`;
+      if (svTz) svTz.textContent = info.timeZone || "—";
+      if (svLang)
+        svLang.textContent = Array.isArray(info.languages)
+          ? info.languages.join(", ")
+          : info.language || "—";
       const priv = [];
       if (info.cookieEnabled) priv.push("Cookies allowed");
       else priv.push("Cookies blocked");
@@ -138,6 +145,15 @@
         svFingerprint.textContent = `id: ${hash || "—"} — seen ${
           seenCount || 0
         } times`;
+      if (serverInfo && svServer)
+        svServer.textContent = `${serverInfo.ip || "—"}`;
+      if (svLocalips)
+        svLocalips.textContent = clientInfo.localIps
+          ? Array.isArray(clientInfo.localIps)
+            ? clientInfo.localIps.join(", ")
+            : clientInfo.localIps
+          : "—";
+      if (svPublicip) svPublicip.textContent = clientInfo.publicIp || "—";
     } catch {}
   }
 
@@ -189,12 +205,23 @@
   async function fetchServerInfo() {
     try {
       const res = await fetch("/whoami");
+      if (!res.ok) throw new Error("no whoami");
       const json = await res.json();
       if (serverPre) serverPre.textContent = safeJSON(json);
       // update simple view with server info
       updateSimpleView(clientInfo, json);
     } catch (e) {
-      if (serverPre) serverPre.textContent = "Error fetching server info: " + e;
+      // likely running on static host (GitHub Pages) — fall back to a public IP service
+      try {
+        const r2 = await fetch("https://api.ipify.org?format=json");
+        const j2 = await r2.json();
+        const fallback = { ip: j2.ip, note: "public-ip via ipify (no server)" };
+        if (serverPre) serverPre.textContent = safeJSON(fallback);
+        updateSimpleView(clientInfo, fallback);
+      } catch (e2) {
+        if (serverPre)
+          serverPre.textContent = "Error fetching server info: " + e;
+      }
     }
   }
   refreshServerBtn && (refreshServerBtn.onclick = fetchServerInfo);
@@ -487,17 +514,29 @@
       if (fpHashEl) fpHashEl.textContent = `Hash: ${hash}`;
 
       // send minimal / anonymous payload
-      const res = await fetch("/fingerprint", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hash }),
-      });
-
-      let body = {};
+      let seenCount = 0;
       try {
-        body = await res.json();
-      } catch {}
-      const seenCount = body.seenCount || 0;
+        const res = await fetch("/fingerprint", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hash }),
+        });
+        let body = {};
+        try {
+          body = await res.json();
+        } catch {}
+        seenCount = body.seenCount || 0;
+      } catch (e) {
+        // no server available (static host). Use localStorage as a demo fallback to track seen counts per-browser only.
+        try {
+          const key = "demo-fp-count-" + hash;
+          const n = parseInt(localStorage.getItem(key) || "0", 10) + 1;
+          localStorage.setItem(key, String(n));
+          seenCount = n;
+        } catch {
+          seenCount = 1;
+        }
+      }
       const score = uniquenessFromSeenCount(seenCount);
 
       if (fpScoreEl)
@@ -630,6 +669,11 @@
         simpleView.style.display === "none" || simpleView.style.display === "";
       simpleView.style.display = show ? "block" : "none";
       toggleViewBtn.textContent = show ? "Hide simple view" : "Simple view";
+      // set a class on body so CSS can hide detailed cards
+      try {
+        document.body.classList.toggle("simple-mode", show);
+      } catch {}
+      // refresh contents (include server info if we have it visible)
       updateSimpleView(clientInfo, null);
     };
   }

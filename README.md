@@ -1,7 +1,5 @@
 PoC website that demonstrates what websites can legitimately detect about you (location with permission, OS, browser fingerprint-ish data, battery, devices, local IP attempts, number of same-site open tabs, headers & IP on the server-side, etc.).
 
-
-
 ## Features
 
 Server-side info (/whoami): server sees your source IP (or proxy IP), User-Agent, Accept-Language, Referer, and other headers.
@@ -26,14 +24,11 @@ Fingerprint Scoring: Generate a hash from device/browser traits (user agent, tim
 
 Privacy Checklist: Visual guide that reacts to user fingerprint
 
-
-
 ## Limitations
 
-A site cannot enumerate open tabs for other origins, arbitrarily read other sites' content, or bypass permission prompts. 
+A site cannot enumerate open tabs for other origins, arbitrarily read other sites' content, or bypass permission prompts.
 
 Browsers have hardened many fingerprinting leaks — but enough surface remains for fingerprinting.
-
 
 ## Project structure
 
@@ -51,8 +46,8 @@ public/styles.css (simple styling)
 README instructions
 ```
 
-
 ## Run
+
 ```bash
 pnpm install
 
@@ -64,6 +59,16 @@ Open http://localhost:3000.
 Click the buttons to grant geolocation / allow device enumeration if you want to see those fields populate.
 
 Open the same URL in other tabs to see the demo of same-origin tab detection.
+
+---
+
+## Hosting on GitHub Pages (static)
+
+This project is served as a static site from the `public/` folder on GitHub Pages. Note a few differences when running on a static host:
+
+- The server endpoints (`/whoami` and `/fingerprint`) are not available on GitHub Pages. The client now falls back to a public IP service (`https://api.ipify.org`) to display your public IP and uses a `localStorage`-based fallback to demo the "seen" counter for fingerprints.
+
+
 
 ---
 
@@ -85,12 +90,14 @@ Disable unnecessary plugins; avoid giving device labels/permissions.
 
 > DISCLAIMER: This software is a demonstration / educational tool. The authors provide it as-is for learning and awareness. Use it responsibly. The authors are not responsible for misuse of this code. Always obtain explicit consent from people before collecting device or fingerprint data. If you plan to store or analyze collected data beyond transient demo use, consult legal counsel and follow applicable data protection laws (e.g., GDPR).
 
-
 ## Other similar projects
 
 \- [Fingerprintjs by Fingerprintjs](https://github.com/fingerprintjs/fingerprintjs)
 
 \- [Webkay by RobinLinus](https://webkay.robinlinus.com/)
+
+\- [Everysiteknows](https://github.com/everysiteknows/everysiteknows)
+
 
 
 ## LICENSE

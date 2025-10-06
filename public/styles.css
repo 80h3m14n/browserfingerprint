@@ -81,6 +81,22 @@ button:hover {
   color: var(--muted);
 }
 
+/* When simple-mode is active, hide technical cards except the simple view */
+body.simple-mode .card {
+  display: none;
+}
+body.simple-mode #simple-view {
+  display: block;
+}
+
+/* Top controls layout */
+.top-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 /* Simple View styles */
 .sv-grid {
   display: grid;

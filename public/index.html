@@ -11,8 +11,9 @@
 <body>
     <main>
         <h1>What websites know about you — PoC</h1>
-        <div style="margin-top:10px">
+        <div class="top-controls" style="margin-top:10px">
             <button id="toggle-view">Simple view</button>
+            <button id="toggle-theme">Toggle theme</button>
         </div>
         <p class="muted">Demo for educational purposes. Ask permission before testing on others.</p>
 
@@ -39,6 +40,12 @@
                 </div>
                 <div class="sv-item sv-wide"><strong>Fingerprint</strong>
                     <div id="sv-fingerprint">—</div>
+                </div>
+                <div class="sv-item sv-wide"><strong>Local IPs</strong>
+                    <div id="sv-localips">—</div>
+                </div>
+                <div class="sv-item sv-wide"><strong>Public IP</strong>
+                    <div id="sv-publicip">—</div>
                 </div>
             </div>
             <p class="muted">This view translates technical data into plain language for non-technical users.</p>
@@ -72,7 +79,6 @@
             <div class="fp-controls">
                 <button id="copy-fp">Copy</button>
                 <button id="export-fp">Export JSON</button>
-                <button id="toggle-theme">Toggle theme</button>
                 <span id="copy-status" class="muted" aria-live="polite"></span>
             </div>
             <div id="fingerprint-hash" class="muted">Hash: —</div>
