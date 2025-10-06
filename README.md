@@ -54,7 +54,7 @@ README instructions
 
 ## Run
 ```bash
-npm install
+pnpm install
 
 node server.js
 ```
